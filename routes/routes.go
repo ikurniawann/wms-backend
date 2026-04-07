@@ -21,7 +21,11 @@ func SetupRoutes(r *gin.Engine) {
 
 	// Public routes (no auth required)
 	r.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "ok"})
+		c.JSON(200, gin.H{
+			"status": "ok",
+			"version": "1.0.0",
+			"service": "wms-backend",
+		})
 	})
 
 	// API v1 group
@@ -34,7 +38,10 @@ func SetupRoutes(r *gin.Engine) {
 	auth := api.Group("/auth")
 	{
 		auth.POST("/login", func(c *gin.Context) {
-			c.JSON(200, gin.H{"message": "Use Supabase Auth"})
+			c.JSON(200, gin.H{
+				"message": "Use Supabase Auth",
+				"docs": "https://supabase.com/docs/guides/auth",
+			})
 		})
 	}
 
@@ -64,6 +71,28 @@ func SetupRoutes(r *gin.Engine) {
 		inventory.GET("/summary", inventoryHandler.GetStockSummary)
 	}
 
+	// Customer routes
+	customerHandler := handlers.NewCustomerHandler()
+	customers := protected.Group("/customers")
+	{
+		customers.GET("", customerHandler.ListCustomers)
+		customers.POST("", customerHandler.CreateCustomer)
+		customers.GET("/:id", customerHandler.GetCustomer)
+		customers.PUT("/:id", customerHandler.UpdateCustomer)
+		customers.DELETE("/:id", customerHandler.DeleteCustomer)
+	}
+
+	// Supplier routes
+	supplierHandler := handlers.NewSupplierHandler()
+	suppliers := protected.Group("/suppliers")
+	{
+		suppliers.GET("", supplierHandler.ListSuppliers)
+		suppliers.POST("", supplierHandler.CreateSupplier)
+		suppliers.GET("/:id", supplierHandler.GetSupplier)
+		suppliers.PUT("/:id", supplierHandler.UpdateSupplier)
+		suppliers.DELETE("/:id", supplierHandler.DeleteSupplier)
+	}
+
 	// Sales Order routes
 	orderHandler := handlers.NewOrderHandler()
 	sales := protected.Group("/sales")
@@ -74,10 +103,24 @@ func SetupRoutes(r *gin.Engine) {
 		sales.PATCH("/orders/:id/status", orderHandler.UpdateOrderStatus)
 	}
 
-	// TODO: Add more routes
-	// - Purchase orders
-	// - Customers
-	// - Suppliers
-	// - Reports
-	// - Movements
+	// Purchase Order routes
+	purchaseHandler := handlers.NewPurchaseHandler()
+	purchases := protected.Group("/purchase")
+	{
+		purchases.GET("/orders", purchaseHandler.ListPurchaseOrders)
+		purchases.POST("/orders", purchaseHandler.CreatePurchaseOrder)
+		purchases.GET("/orders/:id", purchaseHandler.GetPurchaseOrder)
+		purchases.PATCH("/orders/:id/status", purchaseHandler.UpdatePOStatus)
+	}
+
+	// Reports routes (placeholder)
+	reports := protected.Group("/reports")
+	{
+		reports.GET("/daily-sales", func(c *gin.Context) {
+			c.JSON(200, gin.H{"message": "Daily sales report endpoint"})
+		})
+		reports.GET("/product-performance", func(c *gin.Context) {
+			c.JSON(200, gin.H{"message": "Product performance report endpoint"})
+		})
+	}
 }
