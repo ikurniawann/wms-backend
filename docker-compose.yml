@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=wms
+      - DB_PASSWORD=wmspassword
+      - DB_NAME=wms_db
+      - DB_SSLMODE=disable
+      - JWT_SECRET=your-secret-key
+      - PORT=8080
+      - ENV=production
+    depends_on:
+      - postgres
+    networks:
+      - wms-network
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=wms
+      - POSTGRES_PASSWORD=wmspassword
+      - POSTGRES_DB=wms_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - wms-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - wms-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  wms-network:
+    driver: bridge
