@@ -1,3 +1,6 @@
+// main.go - Updated with Router
+// Application entry point
+
 package main
 
 import (
@@ -5,7 +8,9 @@ import (
 	"log"
 	"os"
 
+	"github.com/gin-gonic/gin"
 	"github.com/ikurniawann/wmsmicroservice/database"
+	"github.com/ikurniawann/wmsmicroservice/routes"
 	"github.com/joho/godotenv"
 )
 
@@ -39,11 +44,29 @@ func main() {
 		return
 	}
 
-	// TODO: Initialize Gin router and start server
-	// router := gin.Default()
-	// ... setup routes ...
-	// router.Run(":" + os.Getenv("PORT"))
+	// Setup Gin router
+	gin.SetMode(gin.ReleaseMode)
+	if os.Getenv("ENV") == "development" {
+		gin.SetMode(gin.DebugMode)
+	}
 
-	log.Println("🚀 Server would start on port:", os.Getenv("PORT"))
-	log.Println("💡 Use -migrate flag to run migrations")
+	r := gin.New()
+	r.Use(gin.Logger())
+	r.Use(gin.Recovery())
+
+	// Setup routes
+	routes.SetupRoutes(r)
+
+	// Start server
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Printf("🚀 Server starting on port %s", port)
+	log.Printf("📚 API Documentation: http://localhost:%s/health", port)
+	
+	if err := r.Run(":" + port); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
 }
